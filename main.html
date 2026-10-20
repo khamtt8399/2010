@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>20.10 — Vòng quay may mắn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --ground: #F5ECE4;
+      --s1: #EBDDD1;
+      --s2: #E2CFC1;
+      --s3: #EFE3D9;
+      --ink: #3B1220;
+      --accent: #A63A50;
+      --on-accent: #FFF6F0;
+      --m: clamp(16px, 3vw, 32px);
+      --serif: "Cormorant Garamond", "Cormorant", Georgia, "Times New Roman", serif;
+      --sans: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    @media (prefers-color-scheme:dark) {
+      :root:not([data-theme="light"]) {
+        --ground: #2A0E17;
+        --s1: #3A1823;
+        --s2: #46202D;
+        --s3: #31121C;
+        --ink: #F6E9E0;
+        --accent: #D9788A;
+        --on-accent: #2A0E17
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --ground: #2A0E17;
+      --s1: #3A1823;
+      --s2: #46202D;
+      --s3: #31121C;
+      --ink: #F6E9E0;
+      --accent: #D9788A;
+      --on-accent: #2A0E17
+    }
+
+    html {
+      scroll-padding-top: env(safe-area-inset-top, 0px)
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: var(--ground);
+      color: var(--ink);
+      font: 300 17px/1.6 var(--sans);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      cursor: pointer;
+      border: 0;
+      background: none
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: var(--m)
+    }
+
+    .mark {
+      font: 500 28px/1 var(--serif);
+      letter-spacing: .02em
+    }
+
+    .link {
+      font-size: 14px;
+      text-decoration: underline;
+      text-underline-offset: 5px;
+      text-decoration-thickness: 1px;
+      padding: 8px 0
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: var(--m);
+      padding: 0 var(--m);
+      align-items: center;
+      min-height: calc(100svh - 90px)
+    }
+
+    .copy {
+      grid-column: 1 / span 5
+    }
+
+    .wheelcol {
+      grid-column: 6 / span 7
+    }
+
+    .hi {
+      font-size: 14px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      margin: 0 0 20px
+    }
+
+    h1 {
+      font: 400 clamp(56px, 9vw, 148px)/.92 var(--serif);
+      letter-spacing: -.03em;
+      margin: 0 0 32px
+    }
+
+    h1 em {
+      font-style: italic;
+      font-weight: 400
+    }
+
+    .copy p.lead {
+      max-width: 44ch;
+      margin: 0 0 36px
+    }
+
+    .cta {
+      background: var(--accent);
+      color: var(--on-accent);
+      border-radius: 999px;
+      padding: 16px 40px;
+      font-weight: 500;
+      font-size: 16px;
+      letter-spacing: .04em;
+      transition: transform .2s
+    }
+
+    .cta:hover:not(:disabled) {
+      transform: translateY(-2px)
+    }
+
+    .cta:disabled,
+    .hub:disabled {
+      opacity: .55;
+      cursor: default
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px
+    }
+
+    .wheelwrap {
+      position: relative;
+      width: min(100%, 680px);
+      margin-left: auto;
+      aspect-ratio: 1
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%
+    }
+
+    .pointer {
+      position: absolute;
+      left: 50%;
+      top: -12px;
+      width: 30px;
+      height: 40px;
+      margin-left: -15px;
+      background: var(--accent);
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      z-index: 2
+    }
+
+    .hub {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 19%;
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--on-accent);
+      font: 500 clamp(18px, 3.2vw, 28px)/1 var(--serif);
+      letter-spacing: .06em;
+      z-index: 2
+    }
+
+    .won {
+      padding: 120px var(--m) 0
+    }
+
+    .won h2,
+    .close .sub {
+      font: 400 14px/1 var(--sans);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      margin: 0 0 24px
+    }
+
+    .won ol {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 0 var(--m)
+    }
+
+    .won li {
+      grid-column: span 4;
+      font: 400 clamp(26px, 3.4vw, 44px)/1.1 var(--serif);
+      padding: 20px 0;
+      background: none
+    }
+
+    .won[hidden] {
+      display: none
+    }
+
+    .close {
+      padding: clamp(100px, 16vw, 220px) var(--m) var(--m)
+    }
+
+    .big {
+      font: 400 clamp(90px, 26vw, 520px)/.8 var(--serif);
+      letter-spacing: -.04em;
+      margin: 0 0 28px;
+      font-style: italic;
+      white-space: nowrap
+    }
+
+    dialog {
+      border: 0;
+      background: var(--ground);
+      color: var(--ink);
+      padding: clamp(28px, 5vw, 56px);
+      width: min(620px, 92vw);
+      max-height: 90svh;
+      overflow: auto
+    }
+
+    dialog::backdrop {
+      background: rgba(30, 8, 14, .6)
+    }
+
+    dialog h3 {
+      font: 400 clamp(40px, 7vw, 72px)/1 var(--serif);
+      letter-spacing: -.02em;
+      margin: 0 0 32px
+    }
+
+    dialog .row {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    dialog label {
+      display: block;
+      font-size: 13px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin: 0 0 6px
+    }
+
+    dialog input,
+    dialog textarea {
+      width: 100%;
+      background: var(--s1);
+      color: var(--ink);
+      border: 0;
+      border-bottom: 1px solid var(--ink);
+      padding: 12px;
+      font: 400 16px/1.5 var(--sans);
+      margin-bottom: 20px;
+      border-radius: 0
+    }
+
+    dialog small {
+      display: block;
+      margin: -12px 0 20px;
+      opacity: .8
+    }
+
+    .petal {
+      position: fixed;
+      top: -30px;
+      width: 14px;
+      height: 20px;
+      border-radius: 100% 0 100% 0;
+      pointer-events: none;
+      z-index: 50
+    }
+
+    @media (max-width:860px) {
+      .hero {
+        grid-template-columns: 1fr;
+        min-height: 0;
+        padding-bottom: var(--m)
+      }
+
+      .copy,
+      .wheelcol {
+        grid-column: 1
+      }
+
+      .wheelcol {
+        margin-top: 24px
+      }
+
+      .wheelwrap {
+        margin: 0 auto;
+        width: 100%
+      }
+
+      .won li {
+        grid-column: span 12;
+        border-top: 1px solid var(--s2)
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <span class="mark">20.10</span>
+    <button class="link" id="open-set" type="button">Tuỳ chỉnh quà</button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="copy">
+        <p class="hi">Mừng ngày 20.10</p>
+        <h1>Hôm nay,<br><span id="n1">em</span> được<br><em>chọn quà.</em></h1>
+        <p class="lead">Một vòng quay, một điều bất ngờ. Mọi món quà trên vòng đều được <span id="s1">anh</span> chuẩn
+          bị riêng cho <span id="n2">em</span> — chỉ cần chạm vào để biết hôm nay là món nào.</p>
+        <button class="cta" id="spin" type="button">Quay ngay</button>
+      </div>
+      <div class="wheelcol">
+        <div class="wheelwrap">
+          <div class="pointer"></div>
+          <canvas id="wheel" aria-label="Vòng quay quà tặng"></canvas>
+          <button class="hub" id="hub" type="button" aria-label="Quay">Quay</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="won" id="won" hidden>
+      <h2>Những món quà đã chọn</h2>
+      <ol id="wonlist"></ol>
+    </section>
+
+    <section class="close">
+      <p class="sub" style="font:400 14px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;margin:0 0 24px">
+        Gửi <span id="n3">em</span>, từ <span id="s2">anh</span></p>
+      <p class="big">Yêu <span id="n4">em</span>.</p>
+    </section>
+  </main>
+
+  <dialog id="res">
+    <p class="hi" style="margin-bottom:12px">Món quà của <span id="n5">em</span> là</p>
+    <h3 id="gift"></h3>
+    <div class="row">
+      <button class="cta" id="accept" type="button">Nhận quà</button>
+      <button class="link" id="again" type="button">Quay lại</button>
+    </div>
+  </dialog>
+
+  <dialog id="set">
+    <h3>Tuỳ chỉnh</h3>
+    <label for="f-name">Tên người nhận</label>
+    <input id="f-name" maxlength="20">
+    <label for="f-sender">Người gửi (anh / em / tên)</label>
+    <input id="f-sender" maxlength="20">
+    <label for="f-gifts">Danh sách quà</label>
+    <textarea id="f-gifts" rows="8"></textarea>
+    <small>Mỗi dòng một món quà, từ 2 đến 12 món.</small>
+    <div class="row">
+      <button class="cta" id="save" type="button">Lưu</button>
+      <button class="link" id="reset" type="button">Về mặc định</button>
+      <button class="link" id="close-set" type="button">Đóng</button>
+    </div>
+  </dialog>
+
+  <script>
+    (function () {
+      var TAU = Math.PI * 2;
+      var DEF = {name: "Trâu cái", sender: "Trâu đực", gifts: ["Một bữa BBQ và một bó hoa tươi thắm", "696.969k tiền tươi", "Một buổi hẹn hò chilling", "Một combo mỹ phẩm mới", "Bộ set đồ siêu đẹp", "Một điều ước em tự chọn"]};
+      var KEY = "wheel-2010";
+      var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var cfg = load(), rot = -0.4, win = -1, spinning = false, cur = -1;
+      var cv = document.getElementById("wheel"), ctx = cv.getContext("2d");
+      var $ = function (id) {return document.getElementById(id)};
+
+      function load() {
+        try {var r = localStorage.getItem(KEY); if (r) {var c = JSON.parse(r); if (c && c.gifts && c.gifts.length >= 2) return c} } catch (e) { }
+        return JSON.parse(JSON.stringify(DEF));
+      }
+      function store() {try {localStorage.setItem(KEY, JSON.stringify(cfg))} catch (e) { } }
+      function v(n) {return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+      function setText(cls, t) {document.querySelectorAll(cls).forEach(function (e) {e.textContent = t})}
+      function fill() {
+        ["n1", "n2", "n3", "n4", "n5"].forEach(function (i) {$(i).textContent = cfg.name});
+        ["s1", "s2"].forEach(function (i) {$(i).textContent = cfg.sender});
+      }
+      function lines(t) {
+        if (t.length <= 13) return [t];
+        var w = t.split(" "), best = 1, diff = 1e9;
+        for (var i = 1; i < w.length; i++) {
+          var a = w.slice(0, i).join(" ").length, b = w.slice(i).join(" ").length;
+          if (Math.abs(a - b) < diff) {diff = Math.abs(a - b); best = i}
+        }
+        return w.length > 1 ? [w.slice(0, best).join(" "), w.slice(best).join(" ")] : [t];
+      }
+      function draw() {
+        var s = cv.clientWidth, d = window.devicePixelRatio || 1;
+        if (!s) return;
+        if (cv.width !== Math.round(s * d)) {cv.width = cv.height = Math.round(s * d)}
+        ctx.setTransform(d, 0, 0, d, 0, 0); ctx.clearRect(0, 0, s, s);
+        var R = s / 2, n = cfg.gifts.length, st = TAU / n;
+        var c1 = v("--s1"), c2 = v("--s2"), c3 = v("--s3"), ink = v("--ink"), acc = v("--accent"), onA = v("--on-accent");
+        ctx.save(); ctx.translate(R, R);
+        for (var i = 0; i < n; i++) {
+          var col = i === win ? acc : (n % 2 && i === n - 1 ? c3 : (i % 2 ? c2 : c1));
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, R - 1, rot + i * st, rot + (i + 1) * st); ctx.closePath();
+          ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.fill(); ctx.stroke();
+        }
+        for (var j = 0; j < n; j++) {
+          var ls = lines(cfg.gifts[j]);
+          var chord = 2 * R * .6 * Math.sin(st / 2) * .62;
+          var fs = Math.min(R * .088, chord / ls.length / 1.1);
+          var maxW = R * .66;
+          ctx.font = "500 " + fs + "px " + v("--serif");
+          var wmax = Math.max.apply(null, ls.map(function (t) {return ctx.measureText(t).width}));
+          if (wmax > maxW) {fs = fs * maxW / wmax; ctx.font = "500 " + fs + "px " + v("--serif")}
+          ctx.save(); ctx.rotate(rot + (j + .5) * st);
+          ctx.textAlign = "right"; ctx.textBaseline = "middle";
+          ctx.fillStyle = j === win ? onA : ink;
+          var lh = fs * 1.05, y0 = -(ls.length - 1) * lh / 2;
+          ls.forEach(function (t, k) {ctx.fillText(t, R * .93, y0 + k * lh)});
+          ctx.restore();
+        }
+        ctx.restore();
+      }
+      function rnd(n) {
+        if (window.crypto && crypto.getRandomValues) return crypto.getRandomValues(new Uint32Array(1))[0] % n;
+        return Math.floor(Math.random() * n);
+      }
+      function lock(b) {$("spin").disabled = b; $("hub").disabled = b}
+      function spin() {
+        if (spinning) return;
+        spinning = true; win = -1; lock(true); draw();
+        var n = cfg.gifts.length, idx = rnd(n), off = .15 + .7 * Math.random();
+        var target = (((-Math.PI / 2 - (idx + off) * TAU / n) % TAU) + TAU) % TAU;
+        var now = ((rot % TAU) + TAU) % TAU;
+        var delta = ((((target - now) % TAU) + TAU) % TAU) + TAU * (reduced ? 1 : 6 + Math.floor(Math.random() * 2));
+        var from = rot, dur = reduced ? 1200 : 6000, t0 = performance.now();
+        (function f(t) {
+          var p = Math.min(1, (t - t0) / dur);
+          rot = from + delta * (1 - Math.pow(1 - p, 4)); draw();
+          if (p < 1) requestAnimationFrame(f); else finish(idx);
+        })(t0);
+      }
+      function finish(idx) {
+        spinning = false; win = idx; cur = idx; draw(); lock(false);
+        $("gift").textContent = cfg.gifts[idx];
+        petals();
+        setTimeout(function () {$("res").showModal()}, reduced ? 0 : 600);
+      }
+      function petals() {
+        if (reduced) return;
+        var cols = [v("--accent"), v("--s2"), v("--accent")];
+        for (var i = 0; i < 30; i++) {
+          var p = document.createElement("span"); p.className = "petal";
+          p.style.left = Math.random() * 100 + "vw"; p.style.background = cols[i % 3];
+          document.body.appendChild(p);
+          var dx = (Math.random() - .5) * 160, r = Math.random() * 540 - 270;
+          var a = p.animate([
+            {transform: "translate(0,0) rotate(0deg)", opacity: 1},
+            {transform: "translate(" + dx + "px," + (window.innerHeight + 60) + "px) rotate(" + r + "deg)", opacity: .9}
+          ], {duration: 2600 + Math.random() * 2200, delay: Math.random() * 700, easing: "ease-in", fill: "forwards"});
+          a.onfinish = (function (el) {return function () {el.remove()}})(p);
+        }
+      }
+      $("spin").onclick = spin; $("hub").onclick = spin;
+      $("again").onclick = function () {$("res").close()};
+      $("accept").onclick = function () {
+        $("res").close();
+        var li = document.createElement("li"); li.textContent = cfg.gifts[cur];
+        $("wonlist").appendChild(li); $("won").hidden = false;
+      };
+      $("open-set").onclick = function () {
+        $("f-name").value = cfg.name; $("f-sender").value = cfg.sender;
+        $("f-gifts").value = cfg.gifts.join("\n"); $("set").showModal();
+      };
+      $("close-set").onclick = function () {$("set").close()};
+      $("reset").onclick = function () {
+        $("f-name").value = DEF.name; $("f-sender").value = DEF.sender; $("f-gifts").value = DEF.gifts.join("\n");
+      };
+      $("save").onclick = function () {
+        var g = $("f-gifts").value.split("\n").map(function (s) {return s.trim()}).filter(Boolean).slice(0, 12);
+        if (g.length < 2) {$("f-gifts").focus(); return }
+        cfg = {name: $("f-name").value.trim() || DEF.name, sender: $("f-sender").value.trim() || DEF.sender, gifts: g};
+        store(); fill(); win = -1; draw(); $("set").close();
+      };
+      window.addEventListener("resize", draw);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
+      new MutationObserver(draw).observe(document.documentElement, {attributes: true, attributeFilter: ["data-theme"]});
+      fill(); draw();
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+    })();
+  </script>
+</body>
+
+</html>
